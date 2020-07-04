@@ -17,28 +17,81 @@ static bool scaleAnimation = false;
 const float cyan[] = {0, 1, 1};
 const float blue[] = {0, 0, 1};
 const float pink[] = {1, 0, 1};
+static bool light_one_on = true;
+static bool light_two_on = true;
+
+void ambient_light()
+{
+  GLfloat light_position[] = {1.0, 1.0, 1.0, 0.0};
+  GLfloat white_light[] = {1.0, 1.0, 1.0, 1.0};
+  GLfloat no_light[] = {0, 0, 0, 0};
+
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+  glLightfv(GL_LIGHT0, GL_AMBIENT, white_light);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, white_light);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, white_light);
+}
+
+void core_light()
+{
+  GLfloat light_position[] = {0.0, 0.0, 0.0, 0.1};
+  GLfloat white_light[] = {1.0, 1.0, 0.6, 1.0};
+  GLfloat no_light[] = {0, 0, 0, 0};
+
+  glLightfv(GL_LIGHT1, GL_POSITION, light_position);
+  glLightfv(GL_LIGHT1, GL_AMBIENT, white_light);
+  glLightfv(GL_LIGHT1, GL_DIFFUSE, white_light);
+  glLightfv(GL_LIGHT1, GL_SPECULAR, no_light);
+}
 
 void draw_electron(const float& angle, const float& radius)
 {
+  GLfloat mat_ambient[] = {0.2, 0.2, 0.2, 1.0};
+  GLfloat mat_diffuse[] = {0.6, 0.6, 0.6, 1.0};
+  GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
+  GLfloat mat_shininess[] = {100.0};
+
+  glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+  glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+  glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+  glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+
   float x = cos(angle);
   float y = sin(angle);
   glTranslatef(radius*x, radius*y, 0);
-  glColor3f(1, 1, 1);
   glutSolidSphere(0.08, 15, 15);
 }
 
 void draw_orbit(const float& rotation, const float& radius, const float& angle, const float* orbit_color)
 {
+  GLfloat mat_ambient[] = {0.0, 0.0, 0.1, 1.0};
+  GLfloat mat_diffuse[] = {0.0, 0.0, 0.3, 1.0};
+  GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
+  GLfloat mat_shininess[] = {100.0};
+
+  glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+  glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+  glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+  glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+
   glScalef(scale_factor, scale_factor, scale_factor);
   glRotatef(rotation, 1, 0, 0);
-  glColor3fv(orbit_color);
   glutSolidTorus(0.01, radius, 30, 30);
   draw_electron(angle, radius);
 }
 
 void draw_core()
 {
-  glColor3f(1, 0.9, 0);
+  GLfloat mat_ambient[] = {0.3, 0.1, 0.0, 1.0};
+  GLfloat mat_diffuse[] = {0.8, 0.8, 0.0, 1.0};
+  GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
+  GLfloat mat_shininess[] = {100.0};
+
+  glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+  glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+  glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+  glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+
   glutSolidSphere(0.2, 50, 50);
 }
 
@@ -121,6 +174,28 @@ void specialKeys(int key, int x, int y)
   glutPostRedisplay();
 }
 
+void keyboard(unsigned char key, int x, int y)
+{
+  switch (key) {
+    case 27:
+      exit(0);
+      break;
+    case '0':
+      light_one_on ? glDisable(GL_LIGHT0) : glEnable(GL_LIGHT0);
+      light_one_on = !light_one_on;
+      break;
+    case '1':
+      light_two_on ? glDisable(GL_LIGHT1) : glEnable(GL_LIGHT1);
+      light_two_on = !light_two_on;
+      break;
+    case '2':
+
+    default:
+      break;
+  }
+  glutPostRedisplay();
+}
+
 void mouse(int button, int state, int x, int y)
 {
   switch (button) {
@@ -140,8 +215,14 @@ void mouse(int button, int state, int x, int y)
 
 void init()
 {
+  ambient_light();
+  core_light();
   glClearColor(0.0, 0.0, 0.0, 0.0);
+  glShadeModel(GL_SMOOTH);
   glMatrixMode(GL_MODELVIEW);
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+  glEnable(GL_LIGHT1);
   glEnable(GL_DEPTH_TEST);
 }
 
@@ -155,6 +236,7 @@ int main(int argc, char **argv)
   glutDisplayFunc(draw);
   glutReshapeFunc(reshape);
   glutSpecialFunc(specialKeys);
+  glutKeyboardFunc(keyboard);
   glutMouseFunc(mouse);
   glutIdleFunc(idle);
   glutMainLoop();
