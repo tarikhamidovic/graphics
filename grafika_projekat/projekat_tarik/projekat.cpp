@@ -1,24 +1,19 @@
 #include <GL/glut.h>
 #include <math.h>
-#include <iostream>
 
 static float eye_x = 6.5, eye_y = 0, eye_z = 5;
-static float angle_one = 0;
-static float angle_two = 10;
-static float angle_three = 20;
-static float rot_one = 0;
-static float rot_two = 120;
-static float rot_three = -120;
+static float angle = 0;
+static float rotation = 0;
 static float scale_factor = 1.1;
 static float delta = 0.002;
-static bool rotateAnimation = false;
-static bool translateAnimation = false;
+static float theta = 0.005;
+static bool rotate_animation = false;
+static bool translate_animation = false;
 static bool scaleAnimation = false;
-const float cyan[] = {0, 1, 1};
-const float blue[] = {0, 0, 1};
-const float pink[] = {1, 0, 1};
 static bool light_one_on = true;
 static bool light_two_on = true;
+static bool material_one_on = true;
+static bool material_two_on = true;
 
 void ambient_light()
 {
@@ -51,6 +46,12 @@ void draw_electron(const float& angle, const float& radius)
   GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
   GLfloat mat_shininess[] = {100.0};
 
+  if (!material_two_on) {
+    mat_ambient[0] = mat_diffuse[0] = mat_specular[0] = mat_shininess[0] = 0.0;
+    mat_ambient[1] = mat_diffuse[1] = mat_specular[1] = 0.0;
+    mat_ambient[2] = mat_diffuse[2] = mat_specular[2] = 0.0;
+  }
+
   glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
   glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
@@ -62,7 +63,7 @@ void draw_electron(const float& angle, const float& radius)
   glutSolidSphere(0.08, 15, 15);
 }
 
-void draw_orbit(const float& rotation, const float& radius, const float& angle, const float* orbit_color)
+void draw_orbit(const float& rotation, const float& radius, const float& angle)
 {
   GLfloat mat_ambient[] = {0.0, 0.0, 0.1, 1.0};
   GLfloat mat_diffuse[] = {0.0, 0.0, 0.3, 1.0};
@@ -87,6 +88,12 @@ void draw_core()
   GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
   GLfloat mat_shininess[] = {100.0};
 
+  if (!material_one_on) {
+    mat_ambient[0] = mat_diffuse[0] = mat_specular[0] = mat_shininess[0] = 0.0;
+    mat_ambient[1] = mat_diffuse[1] = mat_specular[1] = 0.0;
+    mat_ambient[2] = mat_diffuse[2] = mat_specular[2] = 0.0;
+  }
+
   glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
   glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
@@ -108,44 +115,26 @@ void draw()
 
   // Prva orbita
   glPushMatrix();
-  draw_orbit(rot_one, 0.75, angle_one, cyan);
+  draw_orbit(rotation, 0.75, angle);
   glPopMatrix();
 
   // Druga orbita
   glPushMatrix();
-  draw_orbit(rot_two, 0.85, angle_two, blue);
+  draw_orbit(rotation + 120, 0.85, angle + 10);
   glPopMatrix();
 
   // Treca orbita
   glPushMatrix();
-  draw_orbit(rot_three, 0.95, angle_three, pink);
+  draw_orbit(rotation - 120, 0.95, angle + 20);
   glPopMatrix();
 
   glutSwapBuffers();
 }
 
-// Pri promjeni velicine prozora oblici ostaju proporcionalni
-void reshape(int w, int h)
-{
-  glViewport(0, 0, (int) w, (int) h);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(40.0, (float) w / (float) h, 1.0, 100.0);
-  glMatrixMode(GL_MODELVIEW);
-}
-
 void idle()
 {
-  if (rotateAnimation) {
-    rot_one += 0.5;
-    rot_two += 0.5;
-    rot_three += 0.5;
-  }
-  if (translateAnimation) {
-    angle_one += 0.005;
-    angle_two += 0.005;
-    angle_three += 0.005;
-  }
+  if (rotate_animation) rotation += 0.5;
+  if (translate_animation) angle += theta;
   if (scaleAnimation) {
     if (scale_factor >= 1.5 || scale_factor <= 1) delta *= -1;
     scale_factor += delta;
@@ -189,7 +178,11 @@ void keyboard(unsigned char key, int x, int y)
       light_two_on = !light_two_on;
       break;
     case '2':
-
+      material_one_on = !material_one_on;
+      break;
+    case '3':
+      material_two_on = !material_two_on;
+      break;
     default:
       break;
   }
@@ -200,17 +193,31 @@ void mouse(int button, int state, int x, int y)
 {
   switch (button) {
     case GLUT_LEFT_BUTTON:
-      if (state == GLUT_DOWN) rotateAnimation = !rotateAnimation;
+      if (state == GLUT_DOWN) rotate_animation = !rotate_animation;
       break;
     case GLUT_RIGHT_BUTTON:
       if (state == GLUT_DOWN) scaleAnimation = !scaleAnimation;
       break;
     case GLUT_MIDDLE_BUTTON:
-      if (state == GLUT_DOWN) translateAnimation = !translateAnimation;
+      if (state == GLUT_DOWN) translate_animation = !translate_animation;
       break;
     default:
       break;
   }
+}
+
+void passiveMouseMotion(int x, int y)
+{
+  if (x < 500 && theta > 0 || x >= 500 && theta < 0) theta *= -1;  
+}
+
+void reshape(int w, int h)
+{
+  glViewport(0, 0, (int) w, (int) h);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluPerspective(25.0, (float) w / (float) h, 1.0, 100.0);
+  glMatrixMode(GL_MODELVIEW);
 }
 
 void init()
@@ -238,6 +245,7 @@ int main(int argc, char **argv)
   glutSpecialFunc(specialKeys);
   glutKeyboardFunc(keyboard);
   glutMouseFunc(mouse);
+  glutPassiveMotionFunc(passiveMouseMotion);
   glutIdleFunc(idle);
   glutMainLoop();
   return 0;
