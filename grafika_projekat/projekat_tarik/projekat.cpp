@@ -1,5 +1,4 @@
-#include <GL/glut.h>
-#include <math.h>
+#include "projekat.hpp"
 
 static float eye_x = 6.5, eye_y = 0, eye_z = 5;
 static float angle = 0;
@@ -14,6 +13,32 @@ static bool light_one_on = true;
 static bool light_two_on = true;
 static bool material_one_on = true;
 static bool material_two_on = true;
+
+void hex_texture()
+{
+  static int texture = 0;
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, gimp_image_hex.width, gimp_image_hex.height,
+                0, GL_RGBA, GL_UNSIGNED_BYTE, gimp_image_hex.pixel_data);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+}
+
+void ice_texture()
+{
+  static int texture = 0;
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, gimp_image_ice.width, gimp_image_ice.height,
+                0, GL_RGBA, GL_UNSIGNED_BYTE, gimp_image_ice.pixel_data);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+}
 
 void ambient_light()
 {
@@ -60,7 +85,12 @@ void draw_electron(const float& angle, const float& radius)
   float x = cos(angle);
   float y = sin(angle);
   glTranslatef(radius*x, radius*y, 0);
-  glutSolidSphere(0.08, 15, 15);
+
+  GLUquadric *quad = gluNewQuadric();
+  ice_texture();
+  gluQuadricTexture(quad, 1);
+  gluSphere(quad, 0.08, 15, 15);
+  glDisable(GL_TEXTURE_2D);
 }
 
 void draw_orbit(const float& rotation, const float& radius, const float& angle)
@@ -83,8 +113,8 @@ void draw_orbit(const float& rotation, const float& radius, const float& angle)
 
 void draw_core()
 {
-  GLfloat mat_ambient[] = {0.3, 0.1, 0.0, 1.0};
-  GLfloat mat_diffuse[] = {0.8, 0.8, 0.0, 1.0};
+  GLfloat mat_ambient[] = {0.3, 0.3, 0.3, 1.0};
+  GLfloat mat_diffuse[] = {0.8, 0.8, 0.8, 1.0};
   GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
   GLfloat mat_shininess[] = {100.0};
 
@@ -99,10 +129,14 @@ void draw_core()
   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
   glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 
-  glutSolidSphere(0.2, 50, 50);
+  GLUquadric *quad = gluNewQuadric();
+  hex_texture();
+  gluQuadricTexture(quad, 1);
+  gluSphere(quad, 0.23, 50, 50);
+  glDisable(GL_TEXTURE_2D);
 }
 
-void draw()
+void display()
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity(); 
@@ -224,29 +258,11 @@ void init()
 {
   ambient_light();
   core_light();
-  glClearColor(0.0, 0.0, 0.0, 0.0);
+  glClearColor(0.07, 0.07, 0.07, 0.0);
   glShadeModel(GL_SMOOTH);
   glMatrixMode(GL_MODELVIEW);
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
   glEnable(GL_LIGHT1);
   glEnable(GL_DEPTH_TEST);
-}
-
-int main(int argc, char **argv)
-{
-  glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-  glutInitWindowSize(1000, 1000);
-  glutCreateWindow("Program");
-  init();
-  glutDisplayFunc(draw);
-  glutReshapeFunc(reshape);
-  glutSpecialFunc(specialKeys);
-  glutKeyboardFunc(keyboard);
-  glutMouseFunc(mouse);
-  glutPassiveMotionFunc(passiveMouseMotion);
-  glutIdleFunc(idle);
-  glutMainLoop();
-  return 0;
 }
