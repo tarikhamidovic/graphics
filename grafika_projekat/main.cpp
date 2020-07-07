@@ -9,10 +9,10 @@ int main(int argc, char **argv)
   init();
   glutDisplayFunc(display);
   glutReshapeFunc(reshape);
-  glutSpecialFunc(specialKeys);
+  glutSpecialFunc(special_keys);
   glutKeyboardFunc(keyboard);
   glutMouseFunc(mouse);
-  glutPassiveMotionFunc(passiveMouseMotion);
+  glutPassiveMotionFunc(passive_mouse_motion);
   glutIdleFunc(idle);
   glutMainLoop();
   return 0;

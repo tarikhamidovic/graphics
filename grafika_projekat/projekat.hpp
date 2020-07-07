@@ -7,16 +7,16 @@
 
 void hex_texture();
 void ice_texture();
-void ambient_light();
+void camera_light();
 void core_light();
 void draw_electron(const float&, const float&);
 void draw_orbit(const float&, const float&, const float&);
 void draw_core();
 void display();
 void idle();
-void specialKeys(int, int, int);
+void special_keys(int, int, int);
 void keyboard(unsigned char, int, int);
 void mouse(int, int, int, int);
-void passiveMouseMotion(int, int);
+void passive_mouse_motion(int, int);
 void reshape(int, int);
 void init();

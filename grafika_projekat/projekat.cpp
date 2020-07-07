@@ -8,12 +8,13 @@ static float delta = 0.002;
 static float theta = 0.005;
 static bool rotate_animation = false;
 static bool translate_animation = false;
-static bool scaleAnimation = false;
+static bool scale_animation = false;
 static bool light_one_on = true;
 static bool light_two_on = true;
 static bool material_one_on = true;
 static bool material_two_on = true;
 
+// Ucitava teksture heksagona
 void hex_texture()
 {
   static int texture = 0;
@@ -27,6 +28,7 @@ void hex_texture()
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
 
+// Ucitava teksture leda
 void ice_texture()
 {
   static int texture = 0;
@@ -40,7 +42,8 @@ void ice_texture()
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
 
-void ambient_light()
+// Svjetlo kamere 
+void camera_light()
 {
   GLfloat light_position[] = {1.0, 1.0, 1.0, 0.0};
   GLfloat white_light[] = {1.0, 1.0, 1.0, 1.0};
@@ -52,6 +55,7 @@ void ambient_light()
   glLightfv(GL_LIGHT0, GL_SPECULAR, white_light);
 }
 
+// Svjetlo jezgra
 void core_light()
 {
   GLfloat light_position[] = {0.0, 0.0, 0.0, 0.1};
@@ -64,6 +68,7 @@ void core_light()
   glLightfv(GL_LIGHT1, GL_SPECULAR, no_light);
 }
 
+// Funkcija za crtanje elektrona koja je pozvana u draw_orbit()
 void draw_electron(const float& angle, const float& radius)
 {
   GLfloat mat_ambient[] = {0.2, 0.2, 0.2, 1.0};
@@ -93,6 +98,7 @@ void draw_electron(const float& angle, const float& radius)
   glDisable(GL_TEXTURE_2D);
 }
 
+// Funkcija koja crta orbitu, kao i elektron, kojem proslijedimo radius i ugao
 void draw_orbit(const float& rotation, const float& radius, const float& angle)
 {
   GLfloat mat_ambient[] = {0.0, 0.0, 0.1, 1.0};
@@ -111,6 +117,7 @@ void draw_orbit(const float& rotation, const float& radius, const float& angle)
   draw_electron(angle, radius);
 }
 
+// Funkcija koja crta jezgro atoma
 void draw_core()
 {
   GLfloat mat_ambient[] = {0.3, 0.3, 0.3, 1.0};
@@ -136,6 +143,7 @@ void draw_core()
   glDisable(GL_TEXTURE_2D);
 }
 
+// Funkcija za crtanje scene
 void display()
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -165,18 +173,21 @@ void display()
   glutSwapBuffers();
 }
 
+// Omoguci odrzavanje animacija kada niti jedna tipka nije pritisnuta
 void idle()
 {
   if (rotate_animation) rotation += 0.5;
   if (translate_animation) angle += theta;
-  if (scaleAnimation) {
+  if (scale_animation) {
     if (scale_factor >= 1.5 || scale_factor <= 1) delta *= -1;
     scale_factor += delta;
   }
   glutPostRedisplay();
 }
 
-void specialKeys(int key, int x, int y)
+// Funkcija za callback pritiskom na specijalne karaktere tastature.
+// Omogucava pomijeranje kamere pomocu navigacijskih tipki.
+void special_keys(int key, int x, int y)
 {
   switch (key) {
     case GLUT_KEY_UP:
@@ -197,6 +208,7 @@ void specialKeys(int key, int x, int y)
   glutPostRedisplay();
 }
 
+// Omogucava paljenje/gasenje svjetala i materijala
 void keyboard(unsigned char key, int x, int y)
 {
   switch (key) {
@@ -223,6 +235,8 @@ void keyboard(unsigned char key, int x, int y)
   glutPostRedisplay();
 }
 
+// Funkcija za callback pritiskom tastera misa.
+// Lijevi klik pokrece rotaciju, desni skaliranje i srednji translaciju.
 void mouse(int button, int state, int x, int y)
 {
   switch (button) {
@@ -230,7 +244,7 @@ void mouse(int button, int state, int x, int y)
       if (state == GLUT_DOWN) rotate_animation = !rotate_animation;
       break;
     case GLUT_RIGHT_BUTTON:
-      if (state == GLUT_DOWN) scaleAnimation = !scaleAnimation;
+      if (state == GLUT_DOWN) scale_animation = !scale_animation;
       break;
     case GLUT_MIDDLE_BUTTON:
       if (state == GLUT_DOWN) translate_animation = !translate_animation;
@@ -240,11 +254,14 @@ void mouse(int button, int state, int x, int y)
   }
 }
 
-void passiveMouseMotion(int x, int y)
+// Promjena smijera kretanja elektrona kada kursor predje polovinu
+// ekrana po x osi
+void passive_mouse_motion(int x, int y)
 {
   if (x < 500 && theta > 0 || x >= 500 && theta < 0) theta *= -1;  
 }
 
+// Pri promjeni velicine prozora oblici ostaju proporcionalni
 void reshape(int w, int h)
 {
   glViewport(0, 0, (int) w, (int) h);
@@ -256,7 +273,7 @@ void reshape(int w, int h)
 
 void init()
 {
-  ambient_light();
+  camera_light();
   core_light();
   glClearColor(0.07, 0.07, 0.07, 0.0);
   glShadeModel(GL_SMOOTH);
